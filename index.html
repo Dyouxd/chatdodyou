@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🐢 CHAT DO DYOU</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #ffffff;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        /* Cabeçalho */
+        .header {
+            background: #10a37f;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+        
+        .header .turtle {
+            font-size: 24px;
+        }
+        
+        /* Área de chat */
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 80px 10px 100px 10px;
+            background: #ffffff;
+        }
+        
+        .message {
+            max-width: 85%;
+            margin-bottom: 15px;
+            padding: 12px 15px;
+            border-radius: 18px;
+            font-size: 15px;
+            line-height: 1.4;
+            word-wrap: break-word;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .user-message {
+            background: #0066cc;
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+        }
+        
+        .assistant-message {
+            background: #f0f0f0;
+            color: #333;
+            margin-right: auto;
+            border-bottom-left-radius: 5px;
+        }
+        
+        .system-message {
+            background: #fff3e0;
+            color: #ff8800;
+            margin: 10px auto;
+            text-align: center;
+            font-size: 13px;
+            border-radius: 10px;
+        }
+        
+        .message img {
+            max-width: 100%;
+            border-radius: 10px;
+            margin-top: 5px;
+        }
+        
+        .file-message {
+            background: #e3f2fd;
+            color: #0066cc;
+            font-weight: bold;
+        }
+        
+        /* Área de entrada */
+        .input-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            padding: 10px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        .input-field {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #0066cc;
+            border-radius: 25px;
+            font-size: 15px;
+            outline: none;
+            background: #f8f8f8;
+        }
+        
+        .input-field:focus {
+            border-color: #10a37f;
+            background: #ffffff;
+        }
+        
+        .send-button {
+            background: #10a37f;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+        
+        .send-button:active {
+            transform: scale(0.9);
+        }
+        
+        /* Botões de ação */
+        .action-bar {
+            position: fixed;
+            bottom: 70px;
+            left: 0;
+            right: 0;
+            display: flex;
+            gap: 5px;
+            padding: 5px 10px;
+            background: transparent;
+            overflow-x: auto;
+            z-index: 99;
+        }
+        
+        .action-button {
+            background: #f0f0f0;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            padding: 8px 15px;
+            font-size: 13px;
+            cursor: pointer;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .action-button:active {
+            background: #e0e0e0;
+        }
+        
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #888;
+            animation: pulse 1s infinite;
+            margin: 0 2px;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+        
+        /* Menu lateral */
+        .sidebar {
+            position: fixed;
+            left: -250px;
+            top: 0;
+            bottom: 0;
+            width: 250px;
+            background: #f0f0f0;
+            transition: left 0.3s;
+            z-index: 200;
+            padding-top: 60px;
+        }
+        
+        .sidebar.open {
+            left: 0;
+        }
+        
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 199;
+            display: none;
+        }
+        
+        .sidebar-overlay.open {
+            display: block;
+        }
+        
+        .sidebar-item {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .sidebar-item:active {
+            background: #e0e0e0;
+        }
+        
+        .menu-button {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 101;
+            background: transparent;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Cabeçalho -->
+    <div class="header">
+        <button class="menu-button" onclick="toggleSidebar()">☰</button>
+        <span class="turtle">🐢</span> CHAT DO DYOU
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-item" onclick="newConversation()">➕ Nova Conversa</div>
+        <div class="sidebar-item" onclick="generateImage()">🖼️ Gerar Imagem</div>
+        <div class="sidebar-item" onclick="importFile()">📁 Importar Arquivo</div>
+        <div class="sidebar-item" onclick="saveConversation()">💾 Salvar Conversa</div>
+        <div class="sidebar-item" onclick="copyConversation()">📋 Copiar</div>
+        <div class="sidebar-item" onclick="clearChat()">🗑️ Limpar</div>
+    </div>
+    
+    <!-- Área de chat -->
+    <div class="chat-container" id="chatContainer">
+        <div class="message system-message">🐢 Bem-vindo ao CHAT DO DYOU!</div>
+        <div class="message system-message">Digite 'imagem: [descrição]' para gerar imagens</div>
+    </div>
+    
+    <!-- Barra de ações -->
+    <div class="action-bar">
+        <button class="action-button" onclick="generateImage()">🖼️ Imagem</button>
+        <button class="action-button" onclick="importFile()">📁 Importar</button>
+        <button class="action-button" onclick="saveConversation()">💾 Salvar</button>
+        <button class="action-button" onclick="clearChat()">🗑️ Limpar</button>
+    </div>
+    
+    <!-- Área de entrada -->
+    <div class="input-container">
+        <input type="text" class="input-field" id="inputField" placeholder="Digite sua mensagem..." onkeypress="handleKeyPress(event)">
+        <button class="send-button" onclick="sendMessage()">➤</button>
+    </div>
+    
+    <!-- Input oculto para arquivos -->
+    <input type="file" id="fileInput" style="display:none" onchange="handleFileUpload(event)" multiple>
+    
+    <script>
+        const GROQ_API_KEY = "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";
+        const MODELO = "openai/gpt-oss-20b";
+        let uploadedFiles = [];
+        
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('sidebarOverlay').classList.toggle('open');
+        }
+        
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+        
+        function addMessage(text, type) {
+            const container = document.getElementById('chatContainer');
+            const message = document.createElement('div');
+            message.className = `message ${type}-message`;
+            message.textContent = text;
+            container.appendChild(message);
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function addImage(src) {
+            const container = document.getElementById('chatContainer');
+            const message = document.createElement('div');
+            message.className = 'message assistant-message';
+            const img = document.createElement('img');
+            img.src = src;
+            img.onclick = function() { window.open(src, '_blank'); };
+            message.appendChild(img);
+            container.appendChild(message);
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function sendMessage() {
+            const input = document.getElementById('inputField');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            addMessage(message, 'user');
+            input.value = '';
+            
+            if (message.toLowerCase().includes('imagem')) {
+                generateImageFromPrompt(message);
+            } else {
+                getAIResponse(message);
+            }
+        }
+        
+        async function getAIResponse(message) {
+            addMessage('⏳ Pensando...', 'system');
+            
+            try {
+                let fileContext = '';
+                if (uploadedFiles.length > 0) {
+                    fileContext = '\n\nARQUIVOS IMPORTADOS:\n' + uploadedFiles.join('\n---\n');
+                }
+                
+                const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${GROQ_API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: MODELO,
+                        messages: [
+                            {role: 'system', content: 'Responda em português. Seja direto.'},
+                            {role: 'user', content: message + fileContext}
+                        ],
+                        temperature: 0.5,
+                        max_tokens: 1000
+                    })
+                });
+                
+                const data = await response.json();
+                const reply = data.choices[0].message.content;
+                
+                // Remover thinking
+                const cleaned = reply.replace(/<think>.*?<\/think>/gs, '').trim();
+                
+                // Remover mensagem de loading
+                removeLastSystemMessage();
+                addMessage(cleaned, 'assistant');
+                
+            } catch (error) {
+                removeLastSystemMessage();
+                addMessage('❌ Erro: ' + error.message, 'system');
+            }
+        }
+        
+        function generateImage() {
+            const prompt = prompt('O que você quer gerar?');
+            if (prompt) {
+                generateImageFromPrompt(prompt);
+            }
+        }
+        
+        async function generateImageFromPrompt(prompt) {
+            addMessage('🎨 Gerando: ' + prompt + '...', 'system');
+            
+            try {
+                const encoded = encodeURIComponent(prompt);
+                const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=512&height=512&nologo=true`;
+                
+                addImage(imageUrl);
+                removeLastSystemMessage();
+                addMessage('✅ Imagem gerada! Clique nela para ampliar.', 'system');
+                
+            } catch (error) {
+                removeLastSystemMessage();
+                addMessage('❌ Erro ao gerar imagem', 'system');
+            }
+        }
+        
+        function importFile() {
+            document.getElementById('fileInput').click();
+        }
+        
+        function handleFileUpload(event) {
+            const files = event.target.files;
+            for (let file of files) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedFiles.push(`--- ${file.name} ---\n${e.target.result}`);
+                    addMessage(`📁 Arquivo importado: ${file.name}`, 'file');
+                };
+                reader.readAsText(file);
+            }
+        }
+        
+        function saveConversation() {
+            const container = document.getElementById('chatContainer');
+            const content = container.innerText;
+            const blob = new Blob([content], {type: 'text/plain'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `conversa_dyou_${Date.now()}.txt`;
+            a.click();
+        }
+        
+        function copyConversation() {
+            const container = document.getElementById('chatContainer');
+            navigator.clipboard.writeText(container.innerText);
+            alert('Conversa copiada!');
+        }
+        
+        function newConversation() {
+            document.getElementById('chatContainer').innerHTML = '';
+            uploadedFiles = [];
+            addMessage('🐢 Nova conversa iniciada!', 'system');
+            toggleSidebar();
+        }
+        
+        function clearChat() {
+            document.getElementById('chatContainer').innerHTML = '';
+            uploadedFiles = [];
+            addMessage('🗑️ Chat limpo!', 'system');
+        }
+        
+        function removeLastSystemMessage() {
+            const container = document.getElementById('chatContainer');
+            const messages = container.querySelectorAll('.system-message');
+            if (messages.length > 0) {
+                const last = messages[messages.length - 1];
+                if (last.textContent.includes('⏳') || last.textContent.includes('🎨')) {
+                    last.remove();
+                }
+            }
+        }
+    </script>
+</body>
+</html>
